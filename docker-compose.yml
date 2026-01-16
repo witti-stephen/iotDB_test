@@ -1,0 +1,75 @@
+services:
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: testdb
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - iotdb
+    deploy:
+      resources:
+        limits:
+          cpus: "2"
+          memory: 4G
+
+  iotdb:
+    image: apache/iotdb:1.3.5-standalone
+    ports:
+      - "6667:6667"
+    privileged: true
+    volumes:
+      - iotdb_data:/iotdb/data
+      - ./logs:/iotdb/logs
+    networks:
+      - iotdb
+    ulimits:
+      nofile:
+        soft: 1048576
+        hard: 1048576
+    deploy:
+      resources:
+        limits:
+          cpus: "2"
+          memory: 4G
+
+  flink-jobmanager:
+    image: flink:1.18-scala_2.12-java17
+    command: jobmanager
+    ports:
+      - "8081:8081"
+    environment:
+      - JOB_MANAGER_RPC_ADDRESS=flink-jobmanager
+      - |
+        FLINK_PROPERTIES=
+        jobmanager.heap.size: 2048m
+    volumes:
+      - ./flink-job:/opt/flink/job
+    networks:
+      - iotdb
+
+  flink-taskmanager:
+    image: flink:1.18-scala_2.12-java17
+    command: taskmanager
+    environment:
+      - JOB_MANAGER_RPC_ADDRESS=flink-jobmanager
+      - |
+        FLINK_PROPERTIES=
+        taskmanager.heap.size: 3072m
+    networks:
+      - iotdb
+    depends_on:
+      - flink-jobmanager
+
+volumes:
+  mysql_data:
+  iotdb_data:
+
+networks:
+  iotdb:
+    external: true
