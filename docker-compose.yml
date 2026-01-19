@@ -32,11 +32,11 @@ services:
       nofile:
         soft: 1048576
         hard: 1048576
-    deploy:
-      resources:
-        limits:
-          cpus: "2"
-          memory: 4G
+    # deploy:
+    #   resources:
+    #     limits:
+    #       cpus: "2"
+    #       memory: 4G
 
   flink-jobmanager:
     image: flink:1.18-scala_2.12-java17
@@ -45,11 +45,12 @@ services:
       - "8081:8081"
     environment:
       - JOB_MANAGER_RPC_ADDRESS=flink-jobmanager
-      - |
-        FLINK_PROPERTIES=
-        jobmanager.heap.size: 2048m
+      # - |
+      #   FLINK_PROPERTIES=
+      #   jobmanager.heap.size: 2048m
     volumes:
       - ./flink-job:/opt/flink/job
+      - ./config:/opt/flink/config
     networks:
       - iotdb
 
@@ -58,9 +59,9 @@ services:
     command: taskmanager
     environment:
       - JOB_MANAGER_RPC_ADDRESS=flink-jobmanager
-      - |
-        FLINK_PROPERTIES=
-        taskmanager.heap.size: 3072m
+      # - |
+      #   FLINK_PROPERTIES=
+      #   taskmanager.heap.size: 3072m
     networks:
       - iotdb
     depends_on:

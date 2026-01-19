@@ -1,0 +1,69 @@
+env: test
+connections:
+  mysql:
+    host: mysql
+    user: user
+    password: password
+    database: testdb
+  iotdb:
+    host: iotdb
+    port: 6667
+    user: root
+    password: root
+
+mysql:
+  partitioning:
+    column: id
+    lower_bound: 1
+    upper_bound: 20000
+    num: 100
+  tables:
+    - name: record_ambience
+      columns:
+        - name: id
+          type: BIGINT
+          primary: true
+          auto_increment: true
+        - name: createdAt
+          type: DATETIME(3)
+        - name: hour
+          type: VARCHAR(10)
+        - name: lineId
+          type: INT
+        - name: deviceId
+          type: INT
+        - name: type
+          type: INT
+        - name: reading
+          type: FLOAT
+        - name: source
+          type: VARCHAR(60)
+        - name: tenId
+          type: INT
+        - name: flowRate
+          type: DECIMAL(10,2)
+
+iotdb:
+  storage_groups:
+    - root.kanban
+  mappings:
+    - table: record_ambience
+      device_field: deviceId
+      timestamp_field: createdAt
+      device_template: root.kanban.device_{deviceId}
+      measurements:
+        - name: reading
+          type: FLOAT
+          field: reading
+        - name: type
+          type: INT32
+          field: type
+        - name: lineId
+          type: INT32
+          field: lineId
+        - name: source
+          type: TEXT
+          field: source
+        - name: tenId
+          type: INT32
+          field: tenId

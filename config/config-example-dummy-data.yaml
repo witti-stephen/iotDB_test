@@ -1,0 +1,50 @@
+env: test
+connections:
+  mysql:
+    host: mysql
+    user: user
+    password: password
+    database: testdb
+  iotdb:
+    host: iotdb
+    port: 6667
+    user: root
+    password: root
+
+mysql:
+  partitioning:
+    column: id
+    lower_bound: 1
+    upper_bound: 100000
+    num: 10
+  tables:
+    - name: sensor_data
+      columns:
+        - name: id
+          type: BIGINT
+          primary: true
+          auto_increment: true
+        - name: device_id
+          type: VARCHAR(50)
+        - name: timestamp
+          type: TIMESTAMP
+        - name: type
+          type: INT
+        - name: reading
+          type: DOUBLE
+
+iotdb:
+  storage_groups:
+    - root.devices
+  mappings:
+    - table: sensor_data
+      device_field: device_id
+      timestamp_field: timestamp
+      device_template: root.devices.{device_id}
+      measurements:
+        - name: reading
+          type: DOUBLE
+          field: reading
+        - name: type
+          type: INT32
+          field: type

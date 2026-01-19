@@ -2,6 +2,28 @@
 
 set -e
 
+# Default values
+CONFIG_PATH="config/config.yaml"
+ENV="test"
+
+# Parse arguments
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    --config)
+      CONFIG_PATH="$2"
+      shift 2
+      ;;
+    --env)
+      ENV="$2"
+      shift 2
+      ;;
+    *)
+      echo "Unknown option: $1"
+      exit 1
+      ;;
+  esac
+done
+
 echo "Taking down containers..."
 docker compose down
 
@@ -19,8 +41,13 @@ done
 
 echo "MySQL is ready."
 
-echo "Generating dummy data..."
-uv run scripts/generate_dummy_data.py
+if [ "$ENV" = "test" ]; then
+  echo "Generating dummy data..."
+  uv run scripts/generate_dummy_data.py --config "$CONFIG_PATH" --table record_ambience --num-rows 15000
+fi
+
+echo "Copying config to container..."
+docker cp "$CONFIG_PATH" iotdb_test-flink-jobmanager-1:/opt/flink/config/config.yaml
 
 echo "Submitting Flink job..."
 docker exec iotdb_test-flink-jobmanager-1 flink run -c com.example.MySQLToIoTDBJob /opt/flink/job/job.jar

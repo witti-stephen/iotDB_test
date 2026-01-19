@@ -43,3 +43,6 @@ buildNumber.properties
 hs_err_pid*
 replay_pid*
 
+# project specific
+logs
+__pycache__
