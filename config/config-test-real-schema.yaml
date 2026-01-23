@@ -67,3 +67,6 @@ iotdb:
     - name: tenId
       type: INT32
       field: tenId
+    - name: flowRate
+      type: DOUBLE
+      field: flowRate
