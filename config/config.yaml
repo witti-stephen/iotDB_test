@@ -2,8 +2,8 @@ env: test
 connections:
   mysql:
     host: mysql
-    user: user
-    password: password
+    user: root
+    password: rootpassword
     database: testdb
   iotdb:
     host: iotdb

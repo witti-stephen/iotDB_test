@@ -76,7 +76,7 @@ def create_table():
     conn.close()
     print(f"Table {TABLE} created or already exists.")
 
-def generate_data(num_rows=100000):
+def generate_data(num_rows=100):
     conn = mysql.connector.connect(host=HOST, user=USER, password=PASSWORD, database=DATABASE)
     cursor = conn.cursor()
 

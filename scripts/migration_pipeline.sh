@@ -43,13 +43,13 @@ echo "MySQL is ready."
 
 if [ "$ENV" = "test" ]; then
   echo "Generating dummy data..."
-  uv run scripts/generate_dummy_data.py --config "$CONFIG_PATH" --table record_ambience --num-rows 15000
+  uv run scripts/generate_dummy_data.py --config "$CONFIG_PATH" --table record_ambience --num-rows 100
 fi
 
 echo "Copying config to container..."
 docker cp "$CONFIG_PATH" iotdb_test-flink-jobmanager-1:/opt/flink/config/config.yaml
 
 echo "Submitting Flink job..."
-docker exec iotdb_test-flink-jobmanager-1 flink run -c com.example.MySQLToIoTDBJob /opt/flink/job/job.jar
+docker exec iotdb_test-flink-jobmanager-1 flink run -c com.example.MySQLToIoTDBBackfillJob /opt/flink/job/job.jar
 
 echo "Migration completed."
