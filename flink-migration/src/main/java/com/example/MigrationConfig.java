@@ -27,6 +27,35 @@ public class MigrationConfig {
         return (Map<String, Object>) root.get("mysql");
     }
 
+    public Map<String, Object> mysqlCdcConfig() {
+        Map<String, Object> mysql = mysqlConfig();
+        if (mysql == null) {
+            return Map.of();
+        }
+        Object cdc = mysql.get("cdc");
+        if (cdc instanceof Map) {
+            return (Map<String, Object>) cdc;
+        }
+        return Map.of();
+    }
+
+    public String mysqlCdcStartupMode() {
+        Object raw = mysqlCdcConfig().get("startup_mode");
+        if (raw == null) {
+            return "latest";
+        }
+        String normalized = raw.toString().trim().toLowerCase();
+        return normalized.isEmpty() ? "latest" : normalized;
+    }
+
+    public Map<String, Object> mysqlCdcSpecificConfig() {
+        Object specific = mysqlCdcConfig().get("specific");
+        if (specific instanceof Map) {
+            return (Map<String, Object>) specific;
+        }
+        return Map.of();
+    }
+
     public Map<String, Object> iotdbConfig() {
         return (Map<String, Object>) root.get("iotdb");
     }
@@ -43,4 +72,3 @@ public class MigrationConfig {
         return (Map<String, Object>) mysqlConfig().get("partitioning");
     }
 }
-

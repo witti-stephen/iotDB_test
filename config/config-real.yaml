@@ -12,6 +12,8 @@ connections:
     password: root
 
 mysql:
+  cdc:
+    startup_mode: latest
   partitioning:
     column: id
     lower_bound: 1

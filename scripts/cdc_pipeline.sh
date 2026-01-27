@@ -32,5 +32,4 @@ echo "Copying config to container (optional; config is volume-mounted)..."
 docker cp "$CONFIG_PATH" iotdb_test-flink-jobmanager-1:/opt/flink/config/config.yaml || true
 
 echo "Submitting Flink CDC job..."
-docker exec iotdb_test-flink-jobmanager-1 flink run -c com.example.MySQLToIoTDBCdcJob /opt/flink/job/job.jar
-
+docker exec iotdb_test-flink-jobmanager-1 flink run -c com.example.MySQLToIoTDBCdcJob /opt/flink/job/job.jar /opt/flink/config/config.yaml

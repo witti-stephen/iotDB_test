@@ -15,6 +15,7 @@ import org.apache.iotdb.flink.IoTDBSink;
 import java.time.Duration;
 import java.util.Objects;
 import java.util.List;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 @SuppressWarnings("unchecked")
@@ -68,6 +69,8 @@ public class MySQLToIoTDBCdcJob {
                 ? ""
                 : ", PRIMARY KEY(`" + primaryKeyColumn + "`) NOT ENFORCED";
 
+        Map<String, String> connectorOptions = buildCdcConnectorOptions(config, mysqlHost, mysqlUser, mysqlPassword, mysqlDatabase, tableName);
+
         // NOTE: connector name and options must match the Flink MySQL CDC connector version.
         // This is the minimal set of options; advanced options can be added via config later.
         tableEnv.executeSql(
@@ -75,13 +78,7 @@ public class MySQLToIoTDBCdcJob {
                         columnsDdl +
                         pkClause +
                         ") WITH (" +
-                        "'connector' = 'mysql-cdc', " +
-                        "'hostname' = '" + mysqlHost + "', " +
-                        "'port' = '3306', " +
-                        "'username' = '" + mysqlUser + "', " +
-                        "'password' = '" + mysqlPassword + "', " +
-                        "'database-name' = '" + mysqlDatabase + "', " +
-                        "'table-name' = '" + tableName + "'" +
+                        renderWithOptions(connectorOptions) +
                         ")"
         );
 
@@ -107,5 +104,101 @@ public class MySQLToIoTDBCdcJob {
             }
         }
         return null;
+    }
+
+    private static Map<String, String> buildCdcConnectorOptions(
+            MigrationConfig config,
+            String mysqlHost,
+            String mysqlUser,
+            String mysqlPassword,
+            String mysqlDatabase,
+            String tableName
+    ) {
+        String startupMode = config.mysqlCdcStartupMode();
+        validateStartupModeConfig(config, startupMode);
+
+        Map<String, String> options = new LinkedHashMap<>();
+        options.put("connector", "mysql-cdc");
+        options.put("hostname", mysqlHost);
+        options.put("port", "3306");
+        options.put("username", mysqlUser);
+        options.put("password", mysqlPassword);
+        options.put("database-name", mysqlDatabase);
+        options.put("table-name", tableName);
+
+        // Flink MySQL CDC connector (3.x) startup options.
+        options.put("scan.startup.mode", toConnectorStartupMode(startupMode));
+        if ("specific".equals(startupMode)) {
+            Map<String, Object> specific = config.mysqlCdcSpecificConfig();
+            options.put("scan.startup.specific-offset.file", specific.get("file").toString());
+            options.put("scan.startup.specific-offset.pos", String.valueOf(parsePositiveLong(specific.get("pos"), "mysql.cdc.specific.pos")));
+        }
+
+        return options;
+    }
+
+    private static void validateStartupModeConfig(MigrationConfig config, String startupMode) {
+        if (!"latest".equals(startupMode) && !"initial".equals(startupMode) && !"specific".equals(startupMode)) {
+            throw new IllegalArgumentException(
+                    "Invalid mysql.cdc.startup_mode='" + startupMode + "'. Expected one of: latest|initial|specific"
+            );
+        }
+
+        if ("specific".equals(startupMode)) {
+            Map<String, Object> specific = config.mysqlCdcSpecificConfig();
+            Object file = specific.get("file");
+            if (file == null || file.toString().trim().isEmpty()) {
+                throw new IllegalArgumentException(
+                        "mysql.cdc.startup_mode=specific requires mysql.cdc.specific.file"
+                );
+            }
+            parsePositiveLong(specific.get("pos"), "mysql.cdc.specific.pos");
+        }
+    }
+
+    private static long parsePositiveLong(Object value, String fieldName) {
+        if (value == null) {
+            throw new IllegalArgumentException(fieldName + " is required and must be > 0");
+        }
+        try {
+            long parsed;
+            if (value instanceof Number) {
+                parsed = ((Number) value).longValue();
+            } else {
+                parsed = Long.parseLong(value.toString().trim());
+            }
+            if (parsed <= 0) {
+                throw new IllegalArgumentException(fieldName + " must be > 0");
+            }
+            return parsed;
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException(fieldName + " must be a number", e);
+        }
+    }
+
+    private static String toConnectorStartupMode(String startupMode) {
+        return switch (startupMode) {
+            case "latest" -> "latest-offset";
+            case "initial" -> "initial";
+            case "specific" -> "specific-offset";
+            default -> throw new IllegalArgumentException("Unsupported startup mode: " + startupMode);
+        };
+    }
+
+    private static String renderWithOptions(Map<String, String> options) {
+        StringBuilder builder = new StringBuilder();
+        boolean first = true;
+        for (Map.Entry<String, String> entry : options.entrySet()) {
+            if (!first) {
+                builder.append(", ");
+            }
+            first = false;
+            builder.append("'").append(escapeSql(entry.getKey())).append("' = '").append(escapeSql(entry.getValue())).append("'");
+        }
+        return builder.toString();
+    }
+
+    private static String escapeSql(String value) {
+        return value.replace("'", "''");
     }
 }

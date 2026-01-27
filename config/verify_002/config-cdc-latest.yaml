@@ -1,4 +1,4 @@
-env: test
+env: verify_002
 connections:
   mysql:
     host: mysql
@@ -47,28 +47,29 @@ mysql:
 
 iotdb:
   storage_groups:
-  - root.kanban
+    - root.kanban
   mappings:
-  - table: record_ambience
-    device_field: deviceId
-    timestamp_field: createdAt
-    device_template: root.kanban.device_{deviceId}
-    measurements:
-    - name: reading
-      type: DOUBLE
-      field: reading
-    - name: type
-      type: INT32
-      field: type
-    - name: lineId
-      type: INT32
-      field: lineId
-    - name: source
-      type: TEXT
-      field: source
-    - name: tenId
-      type: INT32
-      field: tenId
-    - name: flowRate
-      type: DOUBLE
-      field: flowRate
+    - table: record_ambience
+      device_field: deviceId
+      timestamp_field: createdAt
+      device_template: root.kanban.device_{deviceId}
+      measurements:
+        - name: reading
+          type: DOUBLE
+          field: reading
+        - name: type
+          type: INT32
+          field: type
+        - name: lineId
+          type: INT32
+          field: lineId
+        - name: source
+          type: TEXT
+          field: source
+        - name: tenId
+          type: INT32
+          field: tenId
+        - name: flowRate
+          type: DOUBLE
+          field: flowRate
+

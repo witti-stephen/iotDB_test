@@ -61,6 +61,12 @@ Recommended migration pattern:
 2. **CDC (unbounded)**: keep IoTDB in sync while MySQL and IoTDB coexist.
 3. **Cutover**: briefly pause/queue MySQL writes, wait until CDC lag reaches 0, then switch the application to write IoTDB-only and retire MySQL.
 
+CDC startup modes:
+
+- `latest`: stream only from “now” (no snapshot)
+- `initial`: snapshot then stream
+- (optional/unverified) `specific`: start from a binlog file/pos boundary
+
 ### Job packaging (one JAR vs two JARs)
 
 We can keep a **single built artifact** (`job.jar`) while still maintaining clarity by providing **two entrypoints** (two main classes):
@@ -71,6 +77,12 @@ We can keep a **single built artifact** (`job.jar`) while still maintaining clar
 Flink submission picks the entrypoint with `flink run -c <MainClass> ...`.
 
 Alternative: one main with `--mode backfill|cdc`, but two mains is usually easier to operate and tune independently.
+
+### Flink 1.x vs 2.x (compatibility note)
+
+Flink 2.x removes legacy DataStream APIs such as `SinkFunction`, `SourceFunction`, and `RestartStrategies`.
+The current IoTDB Flink connector used by this PoC relies on legacy sink APIs, so this PoC targets **Flink 1.x (1.20.x)**.
+If/when an IoTDB connector compatible with Flink 2.x (Sink V2 / DynamicTableSink) is available, we can re-evaluate upgrading.
 
 ### Flink Web UI submission + config
 
