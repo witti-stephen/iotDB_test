@@ -1,0 +1,163 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: flink-config
+data:
+  flink-conf.yaml: |+
+    jobmanager.rpc.address: flink-jobmanager
+    taskmanager.numberOfTaskSlots: 2
+    blob.server.port: 6124
+    jobmanager.rpc.port: 6123
+    taskmanager.rpc.port: 6122
+    queryable-state.proxy.ports: 6125
+    parallelism.default: 1
+    env.java.opts: --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.base/java.lang=ALL-UNNAMED
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: flink-jobmanager
+spec:
+  type: ClusterIP
+  ports:
+    - name: rpc
+      port: 6123
+    - name: blob-server
+      port: 6124
+    - name: webui
+      port: 8081
+  selector:
+    app: flink
+    component: jobmanager
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flink-jobmanager
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: flink
+      component: jobmanager
+  template:
+    metadata:
+      labels:
+        app: flink
+        component: jobmanager
+    spec:
+      initContainers:
+        - name: download-connectors
+          image: curlimages/curl:latest
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              set -e
+              curl -L https://repo1.maven.org/maven2/org/apache/flink/flink-sql-connector-mysql-cdc/3.5.0/flink-sql-connector-mysql-cdc-3.5.0.jar -o /flink-lib-extra/flink-sql-connector-mysql-cdc-3.5.0.jar
+              curl -L https://repo1.maven.org/maven2/com/mysql/mysql-connector-j/8.0.33/mysql-connector-j-8.0.33.jar -o /flink-lib-extra/mysql-connector-j-8.0.33.jar
+          volumeMounts:
+            - name: flink-lib-extra
+              mountPath: /flink-lib-extra
+      containers:
+        - name: jobmanager
+          image: flink:1.20.3-scala_2.12-java17
+          args: ["jobmanager"]
+          ports:
+            - containerPort: 6123
+              name: rpc
+            - containerPort: 6124
+              name: blob-server
+            - containerPort: 8081
+              name: webui
+          livenessProbe:
+            tcpSocket:
+              port: 6123
+            initialDelaySeconds: 30
+            periodSeconds: 60
+          volumeMounts:
+            - name: flink-config-volume
+              mountPath: /opt/flink/conf/flink-conf.yaml
+              subPath: flink-conf.yaml
+            - name: flink-usrlib
+              mountPath: /opt/flink/usrlib
+            - name: flink-lib-extra
+              mountPath: /opt/flink/lib/flink-sql-connector-mysql-cdc-3.5.0.jar
+              subPath: flink-sql-connector-mysql-cdc-3.5.0.jar
+            - name: flink-lib-extra
+              mountPath: /opt/flink/lib/mysql-connector-j-8.0.33.jar
+              subPath: mysql-connector-j-8.0.33.jar
+          securityContext:
+            runAsUser: 9999
+      volumes:
+        - name: flink-config-volume
+          configMap:
+            name: flink-config
+        - name: flink-usrlib
+          emptyDir: {}
+        - name: flink-lib-extra
+          emptyDir: {}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flink-taskmanager
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: flink
+      component: taskmanager
+  template:
+    metadata:
+      labels:
+        app: flink
+        component: taskmanager
+    spec:
+      initContainers:
+        - name: download-connectors
+          image: curlimages/curl:latest
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              set -e
+              curl -L https://repo1.maven.org/maven2/org/apache/flink/flink-sql-connector-mysql-cdc/3.5.0/flink-sql-connector-mysql-cdc-3.5.0.jar -o /flink-lib-extra/flink-sql-connector-mysql-cdc-3.5.0.jar
+              curl -L https://repo1.maven.org/maven2/com/mysql/mysql-connector-j/8.0.33/mysql-connector-j-8.0.33.jar -o /flink-lib-extra/mysql-connector-j-8.0.33.jar
+          volumeMounts:
+            - name: flink-lib-extra
+              mountPath: /flink-lib-extra
+      containers:
+        - name: taskmanager
+          image: flink:1.20.3-scala_2.12-java17
+          args: ["taskmanager"]
+          ports:
+            - containerPort: 6122
+              name: rpc
+            - containerPort: 6125
+              name: query-state
+          livenessProbe:
+            tcpSocket:
+              port: 6122
+            initialDelaySeconds: 30
+            periodSeconds: 60
+          volumeMounts:
+            - name: flink-config-volume
+              mountPath: /opt/flink/conf/flink-conf.yaml
+              subPath: flink-conf.yaml
+            - name: flink-usrlib
+              mountPath: /opt/flink/usrlib
+            - name: flink-lib-extra
+              mountPath: /opt/flink/lib/flink-sql-connector-mysql-cdc-3.5.0.jar
+              subPath: flink-sql-connector-mysql-cdc-3.5.0.jar
+            - name: flink-lib-extra
+              mountPath: /opt/flink/lib/mysql-connector-j-8.0.33.jar
+              subPath: mysql-connector-j-8.0.33.jar
+          securityContext:
+            runAsUser: 9999
+      volumes:
+        - name: flink-config-volume
+          configMap:
+            name: flink-config
+        - name: flink-usrlib
+          emptyDir: {}
+        - name: flink-lib-extra
+          emptyDir: {}

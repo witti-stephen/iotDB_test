@@ -19,7 +19,7 @@ with open(args.config, 'r') as f:
 
 # Get connections
 mysql_conn = config['connections']['mysql']
-HOST = 'localhost'  # Override for host machine connection
+HOST = mysql_conn.get('host', 'localhost')  # Use config host, fallback to localhost
 USER = mysql_conn['user']
 PASSWORD = mysql_conn['password']
 DATABASE = mysql_conn['database']

@@ -1,0 +1,3 @@
+resources:
+  - iotdb.yaml
+  - flink.yaml

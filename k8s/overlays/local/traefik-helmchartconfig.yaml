@@ -1,0 +1,30 @@
+apiVersion: helm.cattle.io/v1
+kind: HelmChartConfig
+metadata:
+  name: traefik
+  namespace: kube-system
+spec:
+  valuesContent: |-
+    additionalArguments:
+      - "--entrypoints.mysql.address=:3306"
+      - "--entrypoints.iotdb.address=:6667"
+      - "--entrypoints.flink.address=:8081"
+    ports:
+      mysql:
+        port: 3306
+        expose: 
+          default: true
+        exposedPort: 3306
+        protocol: TCP
+      iotdb:
+        port: 6667
+        expose: 
+          default: true
+        exposedPort: 6667
+        protocol: TCP
+      flink:
+        port: 8081
+        expose: 
+          default: true
+        exposedPort: 8081
+        protocol: TCP

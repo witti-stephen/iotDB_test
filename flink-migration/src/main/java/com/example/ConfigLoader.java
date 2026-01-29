@@ -8,7 +8,12 @@ import java.io.InputStream;
 import java.util.Map;
 
 public final class ConfigLoader {
-    private static final String DEFAULT_CONFIG_PATH = "/opt/flink/config/config.yaml";
+    /**
+     * Default location for Kubernetes deployments in this repo.
+     *
+     * The job submission script copies configs into Flink's {@code usrlib}.
+     */
+    private static final String DEFAULT_CONFIG_PATH = "/opt/flink/usrlib/config.yaml";
 
     private ConfigLoader() {}
 
@@ -25,4 +30,3 @@ public final class ConfigLoader {
         }
     }
 }
-

@@ -1,0 +1,41 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: generate-dummy-data
+  namespace: iotdb-dev
+  labels:
+    app: generate-dummy-data
+spec:
+  ttlSecondsAfterFinished: 300
+  template:
+    metadata:
+      labels:
+        app: generate-dummy-data
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: generate-dummy-data
+          image: python:3.12-slim
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              pip install mysql-connector-python pyyaml -q &&               python /scripts/generate_dummy_data.py --config /config/config.yaml --table record_ambience --num-rows 100
+          volumeMounts:
+            - name: scripts
+              mountPath: /scripts
+            - name: config
+              mountPath: /config
+          env:
+            - name: MYSQL_HOST
+              value: "mysql"
+          resources:
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+      volumes:
+        - name: scripts
+          configMap:
+            name: mysql-init-scripts
+        - name: config
+          configMap:
+            name: mysql-init-config

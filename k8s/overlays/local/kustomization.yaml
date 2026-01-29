@@ -1,0 +1,11 @@
+namespace: iotdb-dev
+resources:
+  - ingressroute-tcp.yaml
+  - ../../base
+  - mysql.yaml
+patches:
+  - path: flink-config-patch.yaml
+    target:
+      kind: ConfigMap
+      name: flink-config
+  - path: flink-resources.yaml
