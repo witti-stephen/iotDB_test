@@ -44,7 +44,11 @@ public class MySQLToIoTDBBackfillJob {
         List<Map<String, Object>> measurements = (List<Map<String, Object>>) mapping.get("measurements");
 
         Map<String, Object> mysqlConn = config.mysqlConnection();
-        String mysqlUrl = "jdbc:mysql://" + mysqlConn.get("host") + ":3306/" + mysqlConn.get("database");
+        String mysqlHost = String.valueOf(mysqlConn.get("host"));
+        String mysqlPort = String.valueOf(mysqlConn.getOrDefault("port", 3306));
+        String mysqlDatabase = String.valueOf(mysqlConn.get("database"));
+
+        String mysqlUrl = "jdbc:mysql://" + mysqlHost + ":" + mysqlPort + "/" + mysqlDatabase;
         String mysqlUser = (String) mysqlConn.get("user");
         String mysqlPassword = (String) mysqlConn.get("password");
 

@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flink-jobmanager
+spec:
+  template:
+    spec:
+      containers:
+        - name: jobmanager
+          env:
+            - name: TZ
+              value: "Asia/Hong_Kong"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flink-taskmanager
+spec:
+  template:
+    spec:
+      containers:
+        - name: taskmanager
+          env:
+            - name: TZ
+              value: "Asia/Hong_Kong"
+
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: iotdb
+spec:
+  template:
+    spec:
+      containers:
+        - name: iotdb
+          env:
+            - name: TZ
+              value: "Asia/Hong_Kong"

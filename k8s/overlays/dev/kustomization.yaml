@@ -1,4 +1,4 @@
-namespace: iotdb-prod
+namespace: dev
 resources:
   - ../../base
   - ingressroute-tcp.yaml
@@ -7,4 +7,7 @@ patches:
     target:
       kind: ConfigMap
       name: flink-config
-  - path: flink-resources.yaml
+  # - path: flink-resources.yaml
+  - path: aliyun-image-mirror.yaml
+  - path: iotdb-storageclass-patch.yaml
+  - path: flink-tz-env-patch.yaml

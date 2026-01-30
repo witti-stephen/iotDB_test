@@ -1,0 +1,14 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: iotdb
+spec:
+  volumeClaimTemplates:
+    - metadata:
+        name: iotdb-data
+      spec:
+        storageClassName: alibabacloud-cnfs-nas
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 10Gi

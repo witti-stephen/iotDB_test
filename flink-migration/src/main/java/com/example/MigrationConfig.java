@@ -56,6 +56,15 @@ public class MigrationConfig {
         return Map.of();
     }
 
+    public String mysqlCdcServerTimeZone() {
+        Object raw = mysqlCdcConfig().get("server_time_zone");
+        if (raw == null) {
+            return null;
+        }
+        String value = raw.toString().trim();
+        return value.isEmpty() ? null : value;
+    }
+
     public Map<String, Object> iotdbConfig() {
         return (Map<String, Object>) root.get("iotdb");
     }

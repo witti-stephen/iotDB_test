@@ -1,4 +1,4 @@
-namespace: iotdb-prod
+namespace: prod
 resources:
   - ../../base
   - ingressroute-tcp.yaml

@@ -53,6 +53,7 @@ public class MySQLToIoTDBCdcJob {
 
         Map<String, Object> mysqlConn = config.mysqlConnection();
         String mysqlHost = (String) mysqlConn.get("host");
+        String mysqlPort = String.valueOf(mysqlConn.getOrDefault("port", 3306));
         String mysqlUser = (String) mysqlConn.get("user");
         String mysqlPassword = (String) mysqlConn.get("password");
         String mysqlDatabase = (String) mysqlConn.get("database");
@@ -69,7 +70,7 @@ public class MySQLToIoTDBCdcJob {
                 ? ""
                 : ", PRIMARY KEY(`" + primaryKeyColumn + "`) NOT ENFORCED";
 
-        Map<String, String> connectorOptions = buildCdcConnectorOptions(config, mysqlHost, mysqlUser, mysqlPassword, mysqlDatabase, tableName);
+        Map<String, String> connectorOptions = buildCdcConnectorOptions(config, mysqlHost, mysqlPort, mysqlUser, mysqlPassword, mysqlDatabase, tableName);
 
         // NOTE: connector name and options must match the Flink MySQL CDC connector version.
         // This is the minimal set of options; advanced options can be added via config later.
@@ -109,6 +110,7 @@ public class MySQLToIoTDBCdcJob {
     private static Map<String, String> buildCdcConnectorOptions(
             MigrationConfig config,
             String mysqlHost,
+            String mysqlPort,
             String mysqlUser,
             String mysqlPassword,
             String mysqlDatabase,
@@ -116,11 +118,12 @@ public class MySQLToIoTDBCdcJob {
     ) {
         String startupMode = config.mysqlCdcStartupMode();
         validateStartupModeConfig(config, startupMode);
+        String serverTimeZone = config.mysqlCdcServerTimeZone();
 
         Map<String, String> options = new LinkedHashMap<>();
         options.put("connector", "mysql-cdc");
         options.put("hostname", mysqlHost);
-        options.put("port", "3306");
+        options.put("port", mysqlPort);
         options.put("username", mysqlUser);
         options.put("password", mysqlPassword);
         options.put("database-name", mysqlDatabase);
@@ -128,6 +131,9 @@ public class MySQLToIoTDBCdcJob {
 
         // Flink MySQL CDC connector (3.x) startup options.
         options.put("scan.startup.mode", toConnectorStartupMode(startupMode));
+        if (serverTimeZone != null) {
+            options.put("server-time-zone", serverTimeZone);
+        }
         if ("specific".equals(startupMode)) {
             Map<String, Object> specific = config.mysqlCdcSpecificConfig();
             options.put("scan.startup.specific-offset.file", specific.get("file").toString());

@@ -1,4 +1,4 @@
-namespace: iotdb-prod
+namespace: staging
 resources:
   - ../../base
   - ingressroute-tcp.yaml

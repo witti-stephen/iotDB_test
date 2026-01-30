@@ -108,13 +108,13 @@ echo -e "${YELLOW}Step 2: Submitting $JOB_TYPE job...${NC}"
 
 if [[ "$JOB_TYPE" == "backfill" ]]; then
     kubectl exec -n "$NAMESPACE" "$JOBMANAGER_POD" -- \
-        /opt/flink/bin/flink run -m flink-jobmanager:8081 \
+        /opt/flink/bin/flink run -m localhost:8081 \
         -c com.example.MySQLToIoTDBBackfillJob \
         /opt/flink/usrlib/job.jar \
         /opt/flink/usrlib/config.yaml
 else
     kubectl exec -n "$NAMESPACE" "$JOBMANAGER_POD" -- \
-        /opt/flink/bin/flink run -m flink-jobmanager:8081 \
+        /opt/flink/bin/flink run -m localhost:8081 \
         -c com.example.MySQLToIoTDBCdcJob \
         /opt/flink/usrlib/job.jar \
         /opt/flink/usrlib/config.yaml

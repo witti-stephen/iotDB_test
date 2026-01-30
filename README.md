@@ -40,6 +40,7 @@ iotDB_test/
 ├── config/                          # Runtime YAML configurations
 │   ├── config.yaml                  # Main config (test environment)
 │   ├── config-local.yaml            # Local k3d environment config
+│   ├── config-dev.yaml              # Dev environment config
 │   ├── config-real.yaml             # Production config template
 │   ├── config-test-real-schema.yaml # Schema verification config
 │   ├── config-example-dummy-data.yaml
@@ -64,7 +65,7 @@ iotDB_test/
 │       └── QueryBuilder.java
 ├── flink-job/                       # Built artifacts
 │   └── job.jar
-├── flink-lib/                       # Connector JARs
+├── flink-lib/                       # Connector JARs (Docker Compose mounts)
 │   ├── flink-sql-connector-mysql-cdc-3.5.0.jar
 │   └── mysql-connector-j-8.0.33.jar
 ├── k8s/                             # Kubernetes manifests
@@ -79,8 +80,11 @@ iotDB_test/
 │       │   ├── dummy-data-job.yaml
 │       │   ├── ingressroute-tcp.yaml
 │       │   └── traefik-helmchartconfig.yaml
+│       ├── dev/                     # Dev overlay
+│       ├── staging/                 # Staging overlay
 │       └── prod/                    # Production overlay
 ├── features/                        # Design documentation
+├── llm_log/                         # Notes from LLM-assisted sessions
 ├── docker-compose.yml
 ├── pyproject.toml
 └── README.md
@@ -205,6 +209,10 @@ iotdb:
 # Start stack
 docker compose up -d
 
+# NOTE: docker-compose.yml expects an external Docker network named `iotdb`.
+# Create it once with:
+docker network create iotdb
+
 # Run backfill pipeline
 bash scripts/migration_pipeline.sh
 
@@ -250,6 +258,12 @@ bash scripts/k8s/run_migration_job.sh --job backfill
 # CDC
 bash scripts/k8s/run_migration_job.sh --job cdc
 ```
+
+### Connector JARs in Kubernetes
+
+In Docker Compose, Flink connector JARs are mounted from `flink-lib/`.
+
+In Kubernetes, connectors are downloaded by an `initContainer` (see `k8s/base/flink.yaml`) into an `emptyDir` volume, then mounted into `/opt/flink/lib`.
 
 ## Production Deployment
 
